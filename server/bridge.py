@@ -44,7 +44,7 @@ FONT_DIR = Path(__file__).resolve().parent.parent / 'fonts'
 # TEMPORARY build stamp — bump every deploy to confirm the Pi is running the
 # new code (see startup log, /api/health, and the web UI's browser console).
 # Must match BUILD in web/app.js. Remove once we're done verifying deploys.
-WEB_UI_BUILD = '110'
+WEB_UI_BUILD = '112'
 
 # Defaults; overridable via environment for advanced users / kiosk setups
 DEFAULT_HOST = os.environ.get('WFPICONSOLE_WEB_HOST', '0.0.0.0')

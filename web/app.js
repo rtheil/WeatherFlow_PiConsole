@@ -8,7 +8,7 @@
 
 // TEMPORARY build stamp — must match WEB_UI_BUILD in server/bridge.py.
 // Lets us confirm the browser loaded fresh JS (not a cached copy).
-const BUILD = '110';
+const BUILD = '112';
 
 // ---- tiny DOM + data helpers ------------------------------------------- //
 const $ = (id) => document.getElementById(id);

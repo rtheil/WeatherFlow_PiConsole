@@ -37,7 +37,7 @@ CACHE_TTL = 8  # seconds; be gentle with the API while iterating
 
 # TEMPORARY build stamp — keep in sync with WEB_UI_BUILD in server/bridge.py
 # and BUILD in web/app.js.
-WEB_UI_BUILD = '110'
+WEB_UI_BUILD = '112'
 
 MIME = {
     '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
