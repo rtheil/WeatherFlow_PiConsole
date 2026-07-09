@@ -1,0 +1,445 @@
+/* WeatherFlow PiConsole - modern web UI
+   Dark "instrument cluster" treatment. Responsive across the two target
+   touchscreens (800x480 and 1280x800), both 5:3. */
+
+:root {
+  --ground: #0a0e1a;
+  --surface: #141b2d;
+  --surface-2: #1a2338;
+  --border: rgba(255, 255, 255, .07);
+  --border-strong: rgba(255, 255, 255, .13);
+  --text: #e9eef8;
+  --muted: #8793ab;
+  --faint: #5a6580;
+  --amber: #ffb454;
+  --amber-soft: #ffcf94;
+  --cyan: #5ad1e6;
+  --violet: #a78bfa;
+  --good: #4fd18a;
+  --warn: #f4b63e;
+  --crit: #ff6a6a;
+  --grid-glow: rgba(90, 209, 230, .05);
+  --tile-radius: 18px;
+  --shadow: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 10px 30px -12px rgba(0, 0, 0, .6);
+}
+
+:root[data-theme="light"] {
+  --ground: #eef1f7;
+  --surface: #ffffff;
+  --surface-2: #f5f7fc;
+  --border: rgba(15, 25, 50, .09);
+  --border-strong: rgba(15, 25, 50, .16);
+  --text: #101728;
+  --muted: #5c6884;
+  --faint: #9aa4bd;
+  --grid-glow: rgba(20, 120, 150, .04);
+  --shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 8px 24px -14px rgba(20, 40, 90, .35);
+}
+
+* { box-sizing: border-box; }
+/* The hidden attribute must win over component display rules (e.g. the update
+   badge sets display:inline-flex, which would otherwise keep it visible). */
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+
+body {
+  background:
+    radial-gradient(1200px 700px at 78% -10%, var(--grid-glow), transparent 60%),
+    radial-gradient(900px 600px at 8% 110%, rgba(255, 180, 84, .05), transparent 55%),
+    var(--ground);
+  color: var(--text);
+  font-family: "Inter", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: .1px;
+}
+
+/* Inter ships with the console (fonts/); pull it in when available. */
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Regular.ttf") format("truetype");
+  font-weight: 400; font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Medium.ttf") format("truetype");
+  font-weight: 500; font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-SemiBold.ttf") format("truetype");
+  font-weight: 600; font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Light.ttf") format("truetype");
+  font-weight: 300; font-display: swap;
+}
+
+.console {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: clamp(10px, 1.4vw, 22px);
+  gap: clamp(8px, 1vw, 16px);
+}
+
+/* ---------- top bar ---------- */
+.topbar { display: flex; align-items: center; gap: 16px; padding: 2px 4px; }
+.brand { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; position: relative; }
+.brand-top { display: flex; align-items: center; gap: clamp(8px, 1.1vw, 15px); }
+.station { font-size: clamp(15px, 1.6vw, 22px); font-weight: 650; letter-spacing: .2px; }
+.place { font-size: clamp(10px, 1.1vw, 13px); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar .spacer { flex: 1; }
+
+.live {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: clamp(9px, 1vw, 12px); font-weight: 600; letter-spacing: .8px; text-transform: uppercase;
+  color: var(--good);
+  padding: 5px 11px; border: 1px solid color-mix(in srgb, var(--good) 40%, transparent);
+  border-radius: 999px; background: color-mix(in srgb, var(--good) 12%, transparent);
+  transition: color .3s, border-color .3s, background .3s;
+}
+.live[data-state="down"] { color: var(--crit); border-color: color-mix(in srgb, var(--crit) 40%, transparent); background: color-mix(in srgb, var(--crit) 12%, transparent); }
+.live[data-state="stale"] { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+
+/* Static dot (no continuous animation — constant repaints overheat the Pi's
+   software-composited kiosk browser). */
+.dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+.clock { font-size: clamp(15px, 1.9vw, 24px); font-weight: 600; letter-spacing: .5px; text-align: right; }
+.clock .date { font-size: clamp(9px, 1vw, 12px); color: var(--muted); font-weight: 500; }
+
+/* icon button (settings gear) */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: clamp(44px, 5vw, 54px); height: clamp(40px, 4.6vw, 48px); padding: 0; cursor: pointer;
+  color: var(--muted); background: color-mix(in srgb, var(--text) 6%, transparent);
+  border: 1px solid var(--border); border-radius: 12px;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.icon-btn:hover, .icon-btn:active { color: var(--text); border-color: var(--border-strong); background: color-mix(in srgb, var(--text) 12%, transparent); }
+.icon-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.icon-btn svg { width: clamp(24px, 2.7vw, 30px); height: clamp(24px, 2.7vw, 30px); }
+
+/* settings drawer */
+.drawer-scrim {
+  position: fixed; inset: 0; z-index: 60; background: rgba(4, 7, 14, .5);
+  opacity: 0; pointer-events: none; transition: opacity .28s ease;
+}
+.drawer-scrim.open { opacity: 1; pointer-events: auto; }
+.drawer {
+  position: fixed; top: 0; right: 0; z-index: 70; height: 100vh;
+  width: min(420px, 92vw); display: flex; flex-direction: column;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border-left: 1px solid var(--border-strong);
+  box-shadow: -24px 0 70px -24px rgba(0, 0, 0, .75);
+  transform: translateX(100%); transition: transform .28s cubic-bezier(.2, .9, .25, 1);
+}
+.drawer.open { transform: translateX(0); }
+.drawer-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  font-size: clamp(15px, 1.8vw, 19px); font-weight: 650;
+}
+.drawer-close { font: inherit; font-size: 24px; line-height: 1; color: var(--muted); background: none; border: none; cursor: pointer; padding: 0 4px; }
+.drawer-close:hover { color: var(--text); }
+.drawer-body { padding: 6px 20px 20px; overflow-y: auto; flex: 1; }
+
+/* power actions pinned at the bottom of the drawer */
+.drawer-power { padding: 14px 20px 20px; border-top: 1px solid var(--border); }
+.drawer-power h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--faint); margin: 0 0 10px; }
+.power-btns { display: flex; gap: 8px; }
+.power-btn {
+  flex: 1; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+  color: var(--text); background: color-mix(in srgb, var(--text) 7%, transparent);
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px 6px;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.power-btn:hover { border-color: var(--border-strong); }
+.power-btn.danger { color: var(--crit); border-color: color-mix(in srgb, var(--crit) 35%, transparent); background: color-mix(in srgb, var(--crit) 10%, transparent); }
+.power-btn.danger:hover { background: color-mix(in srgb, var(--crit) 18%, transparent); }
+
+/* confirm dialog + system overlay (built in app.js) */
+.confirm-scrim, .sys-overlay {
+  position: fixed; inset: 0; z-index: 90;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(4, 7, 14, .62); padding: 24px;
+}
+.confirm-card {
+  width: min(360px, 90vw); text-align: center;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--border-strong); border-radius: 16px;
+  box-shadow: 0 24px 70px -24px rgba(0, 0, 0, .8); padding: 24px 22px 20px;
+}
+.confirm-card h4 { margin: 0 0 6px; font-size: 17px; font-weight: 650; }
+.confirm-card p { margin: 0 0 18px; font-size: 13px; color: var(--muted); line-height: 1.45; }
+.confirm-row { display: flex; gap: 10px; }
+.confirm-row button { flex: 1; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 10px; padding: 11px; border: 1px solid var(--border); }
+.confirm-cancel { color: var(--text); background: color-mix(in srgb, var(--text) 8%, transparent); }
+.confirm-ok { color: var(--ground); background: var(--crit); border-color: var(--crit); }
+.confirm-ok.neutral { color: var(--ground); background: var(--cyan); border-color: var(--cyan); }
+.sys-overlay { flex-direction: column; gap: 14px; color: var(--text); }
+.sys-overlay .spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--border-strong); border-top-color: var(--cyan); animation: spin 1s linear infinite; }
+.sys-overlay p { margin: 0; font-size: 15px; color: var(--muted); text-align: center; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.set-section { margin-top: 20px; }
+.set-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--faint); margin: 0 0 4px; }
+.set-section .sec-desc { font-size: 11px; color: var(--faint); margin: 0 0 8px; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); }
+.set-row:first-of-type { border-top: none; }
+.set-label { font-size: 13px; color: var(--text); }
+
+.seg { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.seg button {
+  font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+  color: var(--muted); background: color-mix(in srgb, var(--text) 6%, transparent);
+  border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.seg button:hover { color: var(--text); }
+.seg button[aria-pressed="true"] { color: var(--ground); background: var(--cyan); border-color: var(--cyan); }
+
+.stepper { display: inline-flex; align-items: center; gap: 8px; }
+.stepper button {
+  width: 30px; height: 30px; line-height: 1; font-size: 18px; cursor: pointer;
+  color: var(--text); background: color-mix(in srgb, var(--text) 6%, transparent);
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.stepper button:hover { border-color: var(--border-strong); }
+.stepper .val { min-width: 62px; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.toggle {
+  position: relative; width: 44px; height: 24px; flex: none; padding: 0; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+  transition: background .18s, border-color .18s;
+}
+.toggle::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--muted); transition: transform .18s, background .18s;
+}
+.toggle[aria-pressed="true"] { background: var(--cyan); border-color: var(--cyan); }
+.toggle[aria-pressed="true"]::after { transform: translateX(20px); background: var(--ground); }
+.toggle:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+/* update notification badge + popover */
+.topbar-right { display: flex; align-items: center; gap: clamp(10px, 1.4vw, 16px); position: relative; }
+.update-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  font: inherit; font-size: clamp(9px, 1vw, 12px); font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
+  color: var(--amber); cursor: pointer;
+  padding: 5px 11px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent);
+  background: color-mix(in srgb, var(--amber) 14%, transparent);
+  transition: background .2s, border-color .2s;
+}
+.update-badge:hover { background: color-mix(in srgb, var(--amber) 22%, transparent); }
+.update-badge:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.update-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); }
+
+.popover {
+  position: absolute; top: calc(100% + 10px); left: 0; z-index: 50;
+  width: min(320px, 78vw);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: 0 18px 50px -16px rgba(0,0,0,.7);
+  overflow: hidden;
+}
+.popover::before {
+  content: ""; position: absolute; top: -6px; left: 26px;
+  width: 11px; height: 11px; background: var(--surface-2);
+  border-left: 1px solid var(--border-strong); border-top: 1px solid var(--border-strong);
+  transform: rotate(45deg);
+}
+.popover-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px; border-bottom: 1px solid var(--border);
+  font-size: clamp(12px, 1.3vw, 15px); font-weight: 700; color: var(--amber);
+}
+.popover-close { font: inherit; font-size: 20px; line-height: 1; color: var(--muted); background: none; border: none; cursor: pointer; padding: 0 2px; }
+.popover-close:hover { color: var(--text); }
+.popover-body { padding: 12px 14px 14px; font-size: clamp(11px, 1.1vw, 13px); color: var(--muted); }
+.popover-body p { margin: 10px 0 8px; line-height: 1.45; }
+.ver-row { display: flex; align-items: baseline; justify-content: space-between; padding: 3px 0; }
+.ver-row .k { font-size: .85em; text-transform: uppercase; letter-spacing: .5px; color: var(--faint); }
+.ver-row b { color: var(--text); font-weight: 600; }
+.ver-row b.accent { color: var(--good); }
+.popover-body code {
+  display: block; font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: .95em; color: var(--cyan); background: rgba(0,0,0,.28);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 10px;
+  user-select: all;
+}
+.popover-body a { color: var(--cyan); text-decoration: none; font-weight: 600; }
+.popover-body a:hover { text-decoration: underline; }
+
+/* ---------- grid ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  /* rows 1-2 hold the tall panes (Temp/Pressure/Wind); row 3 is the bottom
+     tiles. Row 3 gets a slightly larger share so the bottom row isn't cramped. */
+  grid-template-rows: 1fr 1fr 1.1fr;
+  gap: clamp(8px, 1vw, 16px);
+  min-height: 0;
+}
+
+.tile {
+  position: relative;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: var(--tile-radius);
+  box-shadow: var(--shadow);
+  padding: clamp(10px, 1.1vw, 18px);
+  display: flex; flex-direction: column;
+  min-width: 0; min-height: 0;
+  overflow: hidden;
+}
+.tile.wide { grid-column: span 2; }
+.tile.tall { grid-row: span 2; }
+
+.tile-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.tile-label { font-size: clamp(9px, .95vw, 11px); font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--faint); }
+.tile-accent { width: 6px; height: 6px; border-radius: 50%; }
+
+/* hero temperature */
+.hero { justify-content: space-between; }
+.temp-main { display: flex; align-items: flex-start; gap: 4px; line-height: .92; }
+.temp-val { font-size: clamp(48px, 8vw, 128px); font-weight: 250; letter-spacing: -3px; }
+.temp-unit { font-size: clamp(18px, 2.6vw, 34px); font-weight: 300; color: var(--muted); margin-top: .35em; }
+
+/* plain-text line, standardized with the 24h diff above it */
+.feels {
+  display: block; width: fit-content;
+  font-size: clamp(12px, 1.45vw, 18px); color: var(--amber-soft);
+  margin-top: 6px; font-weight: 500;
+}
+.feels b { font-weight: 700; }
+#feelsDesc:not(:empty)::before { content: "·"; margin: 0 7px; color: var(--faint); font-weight: 500; }
+
+.substats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat { min-width: 0; }
+.stat .k { font-size: clamp(9px, .95vw, 11px); color: var(--faint); text-transform: uppercase; letter-spacing: .8px; }
+.stat .v { font-size: clamp(15px, 2vw, 26px); font-weight: 500; margin-top: 2px; }
+.stat .v small { font-size: .55em; color: var(--muted); font-weight: 500; }
+.hi { color: var(--crit); } .lo { color: var(--cyan); }
+
+.minmax { display: flex; gap: 14px; font-size: clamp(10px, 1.1vw, 13px); color: var(--muted); }
+.minmax b { font-weight: 600; }
+
+/* gauges */
+.gauge-wrap { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; position: relative; }
+svg { width: 100%; height: 100%; display: block; }
+.g-num { font-size: clamp(20px, 3vw, 40px); font-weight: 500; }
+.g-unit { font-size: clamp(9px, 1vw, 12px); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+/* Wind speed/direction sits below the compass so the needle owns the center */
+.compass-readout { display: flex; flex-direction: column; align-items: center; gap: 1px; margin: 4px 0 2px; }
+
+/* Gauge readouts drawn inside the SVG viewBox stay locked to the arc at any
+   viewport height (font-size is in viewBox units, so it scales with the gauge) */
+.svg-val   { fill: var(--text);  font-size: 30px; font-weight: 500; }
+.svg-unit  { fill: var(--muted); font-size: 10px; letter-spacing: .5px; }
+.svg-trend { fill: currentColor; color: var(--muted); font-size: 11px; font-weight: 600; }
+.svg-scale { fill: var(--faint); font-size: 9px; }
+
+.readout-row { display: flex; justify-content: space-between; gap: 8px; margin-top: auto; font-size: clamp(9px, 1vw, 12px); }
+.readout-row .k { color: var(--faint); text-transform: uppercase; letter-spacing: .6px; }
+.readout-row .v { font-weight: 600; }
+
+/* forecast */
+.sager { font-size: clamp(10px, 1.15vw, 14px); color: var(--muted); line-height: 1.45; }
+.sager b { color: var(--text); font-weight: 600; }
+.hours { display: flex; gap: clamp(4px, .8vw, 12px); margin-top: auto; }
+.hour { flex: 1; text-align: center; display: flex; flex-direction: column; gap: 3px; align-items: center; }
+.hour .h { font-size: clamp(8px, .9vw, 11px); color: var(--faint); }
+.hour .i { font-size: clamp(15px, 2vw, 24px); }
+.hour .t { font-size: clamp(11px, 1.25vw, 15px); font-weight: 600; }
+.hour .p { font-size: clamp(8px, .85vw, 10px); color: var(--cyan); }
+
+/* mini rows */
+.mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin-top: 6px; }
+
+/* bottom metric tiles (Sun/Rain/Lightning): the 2x2 fact grid grows to fill the
+   tile and spreads its two rows apart, so the content uses the full height with
+   real separation instead of clustering at the top. */
+.tile.metric .mini-grid { flex: 1 1 auto; align-content: space-between; }
+.mini .k { font-size: clamp(8px, .9vw, 11px); color: var(--faint); text-transform: uppercase; letter-spacing: .6px; }
+.mini .v { font-size: clamp(14px, 1.7vw, 22px); font-weight: 500; }
+.mini .v small { font-size: .55em; color: var(--muted); }
+
+/* header "now" summary */
+.now { display: flex; align-items: center; gap: 12px; }
+.now-icon { display: inline-flex; align-items: center; line-height: 1; }
+.now-icon .wicon { width: clamp(30px, 3.4vw, 42px); height: auto; display: block; }
+.now-cond { font-size: clamp(12px, 1.35vw, 17px); font-weight: 600; }
+.now-sub { font-size: clamp(9px, 1vw, 12px); color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.now-sub b { font-weight: 700; }
+.now-dot { color: var(--faint); }
+
+/* 24-hour temperature difference headline */
+.temp-diff { font-size: clamp(12px, 1.45vw, 18px); color: var(--muted); margin-top: 8px; font-weight: 500; min-height: 1.2em; }
+.temp-diff b { font-weight: 700; }
+
+/* top cluster: current temp + 24h diff on the left, high/low stacked on the right */
+.temp-row { display: flex; justify-content: space-between; align-items: flex-start; gap: clamp(16px, 4vw, 48px); margin-top: 12px; }
+.temp-left { min-width: 0; }
+
+/* actual (observed) high/low with time, stacked high-over-low, right-aligned */
+.hilo { display: flex; flex-direction: column; gap: clamp(10px, 1.6vh, 18px); text-align: right; }
+.hilo-col { min-width: 0; }
+.hilo-col .k { font-size: clamp(9px, .95vw, 11px); color: var(--faint); text-transform: uppercase; letter-spacing: .8px; }
+.hilo-val { font-size: clamp(24px, 3.2vw, 44px); font-weight: 300; line-height: 1.05; margin-top: 2px; }
+.hilo-meta { font-size: clamp(9px, 1vw, 12px); color: var(--muted); margin-top: 3px; }
+
+/* hero: a tight top cluster and a bottom cluster, one breathing gap between */
+.hero-top { display: flex; flex-direction: column; gap: clamp(8px, 1.6vh, 18px); min-width: 0; }
+.hero-bottom { display: flex; flex-direction: column; gap: clamp(10px, 1.8vh, 20px); min-width: 0; }
+
+/* forecast narrative inside the hero pane */
+.hero-forecast { min-width: 0; }
+
+/* 5-day outlook: one column per day — weekday, icon, high (red), low (blue) */
+.forecast5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: clamp(4px, 1vw, 14px); }
+.fc-day { display: flex; flex-direction: column; align-items: center; gap: clamp(4px, .8vh, 8px); min-width: 0; }
+.fc-dow { font-size: clamp(9px, 1vw, 12px); font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--faint); }
+.fc-icon .wicon { width: clamp(30px, 3.2vw, 46px); height: auto; display: block; }
+.fc-temps { display: flex; flex-direction: column; align-items: center; line-height: 1.12; }
+.fc-hi { color: var(--crit); font-weight: 600; font-size: clamp(14px, 1.6vw, 22px); }
+.fc-lo { color: var(--cyan); font-weight: 500; font-size: clamp(12px, 1.35vw, 18px); }
+.fc-precip { display: flex; align-items: center; justify-content: center; gap: 2px; min-height: 1.1em; font-size: clamp(9px, 1vw, 12px); font-weight: 600; color: var(--text); opacity: .8; }
+.fc-drop { width: .95em; height: .95em; flex: none; color: var(--cyan); }
+
+/* moon tile: disc floats up over the top-right (near the title); facts below */
+.moon-svg {
+  position: absolute; top: clamp(4px, .8vw, 12px); right: clamp(14px, 2.2vw, 26px);
+  width: clamp(58px, 7vw, 94px); height: auto; z-index: 1;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .4));
+}
+.moon-headline { min-width: 0; padding-right: clamp(66px, 8vw, 100px); }
+.moon-phase { font-size: clamp(15px, 1.9vw, 24px); font-weight: 600; line-height: 1.08; text-wrap: balance; }
+.moon-illum { font-size: clamp(14px, 1.6vw, 19px); font-weight: 500; margin-top: 1px; }
+.moon-illum .k { color: var(--faint); font-size: .62em; text-transform: uppercase; letter-spacing: .6px; font-weight: 700; }
+/* keep a real bottom margin: tighter internal gaps so the last line never
+   reaches the tile's clipped edge (baseline had exactly 0 slack) */
+.moon-grid { margin-top: auto; row-gap: 4px; padding-bottom: 2px; }
+.moon-mini { font-size: clamp(12px, 1.4vw, 16px); }
+
+/* On the small 800x480 panel, drop label letter-spacing a touch and tighten */
+@media (max-width: 900px) {
+  .temp-val { font-size: clamp(44px, 12vw, 90px); }
+}
+
+/* TEMPORARY build tag (remove with the other build stamps) */
+.build-tag {
+  position: fixed; bottom: 4px; right: 6px; z-index: 100;
+  font-size: 10px; font-family: ui-monospace, monospace; letter-spacing: .5px;
+  color: var(--faint); background: color-mix(in srgb, var(--ground) 70%, transparent);
+  padding: 2px 6px; border-radius: 6px; pointer-events: none;
+}
+.build-tag.mismatch { color: var(--ground); background: var(--crit); font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

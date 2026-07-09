@@ -1,0 +1,5 @@
+# Optional dependencies for the web UI bridge (server/bridge.py).
+# The console runs without these; install them to enable the browser front-end:
+#   pip install -r requirements-web.txt
+fastapi>=0.110
+uvicorn[standard]>=0.29

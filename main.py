@@ -197,6 +197,23 @@ class wfpiconsole(App):
         # Start Websocket or UDP service
         self.start_connection_service()
 
+        # Start web UI bridge (optional). Serves the modern browser front-end
+        # and streams live data to it. Never breaks the console if the optional
+        # web dependencies are missing - see server/bridge.py.
+        try:
+            from server import start_web_bridge
+            web_bridge = start_web_bridge(self)
+            if web_bridge:
+                # The browser UI is the interface now, so hide the Kivy window.
+                # The app keeps running (data pipeline + bridge) - it's just no
+                # longer drawn on screen, so nothing sits on top of the kiosk and
+                # there's no window to close. If the bridge did NOT start (web
+                # deps missing), the Kivy GUI stays visible as a fallback.
+                Clock.schedule_once(lambda dt: Window.hide(), 0)
+                Logger.info('web_bridge: Kivy window hidden (web UI is active)')
+        except Exception as error:
+            Logger.warning(f'web_bridge: failed to start ({error})')
+
         # Check for latest version
         self.system = system()
         Clock.schedule_once(self.system.check_version)

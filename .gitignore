@@ -17,3 +17,12 @@ graphics/
 
 # Ignore Python virtual environment
 venv/
+
+# Ignore machine-specific local dev launch config (web UI preview)
+.claude/launch.json
+
+# Ignore local dev-preview WeatherFlow credentials (never commit secrets)
+tools/dev_credentials.json
+
+# Ignore local dev-preview settings scratch file
+tools/dev_settings.json

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>WeatherFlow Console</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="console">
+
+    <!-- ================= TOP BAR ================= -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-top">
+          <span class="station" id="station">WeatherFlow Console</span>
+          <span class="live" id="live" data-state="down"><span class="dot"></span><span id="liveText">Connecting</span></span>
+          <button class="update-badge" id="updateBadge" type="button" hidden aria-haspopup="dialog" aria-expanded="false">
+            <span class="update-dot"></span>Update
+          </button>
+        </div>
+        <span class="place" id="place">&mdash;</span>
+
+        <div class="popover" id="updatePopover" role="dialog" aria-label="Update available" hidden>
+          <div class="popover-head">
+            <span>Update available</span>
+            <button class="popover-close" id="updateClose" type="button" aria-label="Close">&times;</button>
+          </div>
+          <div class="popover-body">
+            <div class="ver-row"><span class="k">Installed</span><b id="verCurrent">--</b></div>
+            <div class="ver-row"><span class="k">Latest</span><b class="accent" id="verLatest">--</b></div>
+            <p>To update, run this on the console, then restart:</p>
+            <code>wfpiconsole update</code>
+            <a id="verLink" href="#" target="_blank" rel="noopener">View release notes ↗</a>
+          </div>
+        </div>
+      </div>
+      <span class="spacer"></span>
+      <div class="now">
+        <span class="now-icon" id="condIcon">&mdash;</span>
+        <div class="now-txt">
+          <div class="now-cond" id="condText">&mdash;</div>
+          <div class="now-sub"><b class="hi" id="condHi">--</b> / <b class="lo" id="condLo">--</b><span class="now-dot">&middot;</span><span id="condPrecip">--</span> precip</div>
+        </div>
+      </div>
+      <span class="spacer"></span>
+      <button class="icon-btn" id="settingsBtn" type="button" title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.4"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+      <div class="clock"><span id="time">--:--:--</span><div class="date" id="date">&mdash;</div></div>
+    </div>
+
+    <!-- ================= GRID ================= -->
+    <div class="grid">
+
+      <!-- HERO: TEMPERATURE -->
+      <div class="tile tall wide hero">
+        <div class="hero-top">
+          <div>
+            <div class="tile-head"><span class="tile-accent" style="background:var(--amber)"></span><span class="tile-label">Outdoor Temperature</span></div>
+            <div class="temp-row">
+              <div class="temp-left">
+                <div class="temp-main"><span class="temp-val" id="outTemp">--</span></div>
+                <div class="temp-diff" id="tempDiff">&mdash;</div>
+                <span class="feels" id="feels">Feels like <b id="feelsLike">--</b><span id="feelsDesc"></span></span>
+              </div>
+              <div class="hilo">
+                <div class="hilo-col">
+                  <div class="k">Today's High</div>
+                  <div class="hilo-val hi" id="tempMax">--</div>
+                  <div class="hilo-meta"><span id="tempMaxTime">--</span></div>
+                </div>
+                <div class="hilo-col">
+                  <div class="k">Today's Low</div>
+                  <div class="hilo-val lo" id="tempMin">--</div>
+                  <div class="hilo-meta"><span id="tempMinTime">--</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5-day outlook fills the hero's middle space -->
+        <div class="forecast5" id="forecast5"></div>
+
+        <div class="hero-bottom">
+          <div class="substats">
+            <div class="stat"><div class="k">Dew Point</div><div class="v" id="dewPoint">--</div></div>
+            <div class="stat"><div class="k">Humidity</div><div class="v" id="humidity">--</div></div>
+            <div class="stat"><div class="k">3-hr Trend</div><div class="v" id="tempTrend">--</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRESSURE -->
+      <div class="tile tall">
+        <div class="tile-head"><span class="tile-accent" style="background:var(--violet)"></span><span class="tile-label">Pressure</span></div>
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 200 160" aria-label="Barometric pressure">
+            <path d="M28 140 A82 82 0 1 1 172 140" fill="none" stroke="var(--border)" stroke-width="12" stroke-linecap="round"/>
+            <path id="baroArc" d="M28 140 A82 82 0 1 1 172 140" fill="none" stroke="url(#baroGrad)" stroke-width="12" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="baroGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="var(--cyan)"/>
+                <stop offset="1" stop-color="var(--violet)"/>
+              </linearGradient>
+            </defs>
+            <text class="svg-val" id="slp" x="100" y="98" text-anchor="middle">--</text>
+            <text class="svg-unit" id="slpUnit" x="100" y="114" text-anchor="middle"></text>
+            <text class="svg-trend" id="slpTrend" x="100" y="131" text-anchor="middle" fill="currentColor"></text>
+            <text class="svg-scale" id="baroMinLbl" x="30" y="156" text-anchor="middle">--</text>
+            <text class="svg-scale" id="baroMaxLbl" x="170" y="156" text-anchor="middle">--</text>
+          </svg>
+        </div>
+        <div class="readout-row">
+          <span><span class="k">Min</span> <span class="v" id="slpMin">--</span></span>
+          <span><span class="k">Max</span> <span class="v" id="slpMax">--</span></span>
+        </div>
+      </div>
+
+      <!-- WIND -->
+      <div class="tile tall">
+        <div class="tile-head"><span class="tile-accent" style="background:var(--cyan)"></span><span class="tile-label">Wind</span></div>
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 200 200" aria-label="Wind direction">
+            <circle cx="100" cy="100" r="88" fill="none" stroke="var(--border)" stroke-width="1.5"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <g id="ticks" stroke="var(--faint)"></g>
+            <text x="100" y="26" text-anchor="middle" fill="var(--muted)" font-size="12" font-weight="700">N</text>
+            <text x="178" y="105" text-anchor="middle" fill="var(--faint)" font-size="11">E</text>
+            <text x="100" y="184" text-anchor="middle" fill="var(--faint)" font-size="11">S</text>
+            <text x="22" y="105" text-anchor="middle" fill="var(--faint)" font-size="11">W</text>
+            <g id="needle" transform="rotate(0 100 100)">
+              <path d="M100 34 L108 100 L100 112 L92 100 Z" fill="var(--cyan)"/>
+              <path d="M100 166 L108 100 L92 100 Z" fill="color-mix(in srgb, var(--cyan) 30%, transparent)"/>
+            </g>
+            <circle cx="100" cy="100" r="6" fill="var(--surface)" stroke="var(--cyan)" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="compass-readout">
+          <span class="g-num" id="windSpd">--</span>
+          <span class="g-unit" id="windDir">--</span>
+        </div>
+        <div class="readout-row">
+          <span><span class="k">Gust</span> <span class="v" id="windGust">--</span></span>
+          <span><span class="k">Avg</span> <span class="v" id="avgWind">--</span></span>
+          <span><span class="k">Max</span> <span class="v" id="maxGust">--</span></span>
+        </div>
+      </div>
+
+      <!-- SUN & UV -->
+      <div class="tile metric">
+        <div class="tile-head"><span class="tile-accent" style="background:var(--amber)"></span><span class="tile-label">Sun &amp; UV</span></div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span class="g-num" id="uvIndex">--</span>
+          <span id="uvLabel" style="color:var(--warn);font-weight:600;font-size:clamp(10px,1.1vw,13px)"></span>
+        </div>
+        <div class="mini-grid">
+          <div class="mini"><div class="k">Radiation</div><div class="v" id="radiation">--</div></div>
+          <div class="mini"><div class="k">Peak Sun</div><div class="v" id="peakSun">--</div></div>
+          <div class="mini"><div class="k">Sunrise</div><div class="v" id="sunrise" style="font-size:clamp(12px,1.4vw,17px)">--</div></div>
+          <div class="mini"><div class="k">Sunset</div><div class="v" id="sunset" style="font-size:clamp(12px,1.4vw,17px)">--</div></div>
+        </div>
+        <div style="height:8px;border-radius:999px;background:linear-gradient(90deg,var(--good),var(--warn) 55%,var(--crit));margin-top:12px;position:relative">
+          <span id="uvMarker" style="position:absolute;top:-3px;left:0%;width:14px;height:14px;border-radius:50%;background:var(--text);border:2px solid var(--ground);transition:left .8s ease"></span>
+        </div>
+      </div>
+
+      <!-- RAINFALL -->
+      <div class="tile metric">
+        <div class="tile-head"><span class="tile-accent" style="background:var(--cyan)"></span><span class="tile-label">Rainfall</span></div>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span class="g-num" style="font-weight:400" id="todayRain">--</span><span class="g-unit">today</span>
+        </div>
+        <div class="mini-grid">
+          <div class="mini"><div class="k">Rate</div><div class="v" id="rainRate">--</div></div>
+          <div class="mini"><div class="k">Yesterday</div><div class="v" id="yesterdayRain">--</div></div>
+          <div class="mini"><div class="k">Month</div><div class="v" id="monthRain">--</div></div>
+          <div class="mini"><div class="k">Year</div><div class="v" id="yearRain">--</div></div>
+        </div>
+      </div>
+
+      <!-- LIGHTNING -->
+      <div class="tile metric">
+        <div class="tile-head"><span class="tile-accent" style="background:var(--warn)"></span><span class="tile-label">Lightning</span></div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span class="g-num" id="strikes3hr">--</span>
+          <span style="color:var(--muted);font-size:clamp(10px,1.1vw,13px)">strikes &middot; last 3 hr</span>
+        </div>
+        <div class="mini-grid">
+          <div class="mini"><div class="k">Last strike</div><div class="v" id="strikeDeltaT" style="font-size:clamp(11px,1.3vw,15px)">--</div></div>
+          <div class="mini"><div class="k">Distance</div><div class="v" id="strikeDist">--</div></div>
+          <div class="mini"><div class="k">Today</div><div class="v" id="strikesToday">--</div></div>
+          <div class="mini"><div class="k">This month</div><div class="v" id="strikesMonth">--</div></div>
+        </div>
+      </div>
+
+      <!-- MOON -->
+      <div class="tile">
+        <div class="tile-head"><span class="tile-accent" style="background:var(--violet)"></span><span class="tile-label">Moon</span></div>
+        <svg class="moon-svg" viewBox="0 0 100 100" aria-label="Moon phase">
+          <defs><clipPath id="moonClip"><circle cx="50" cy="50" r="46"/></clipPath></defs>
+          <circle cx="50" cy="50" r="47" fill="none" stroke="var(--border-strong)" stroke-width="1"/>
+          <g clip-path="url(#moonClip)">
+            <circle cx="50" cy="50" r="46" fill="#242d47"/>
+            <path id="moonLit" d="" fill="#eef2fb"/>
+          </g>
+        </svg>
+        <div class="moon-headline">
+          <div class="moon-phase" id="moonPhase">&mdash;</div>
+          <div class="moon-illum"><span id="moonIllum">--</span><span class="k">&nbsp;lit</span></div>
+        </div>
+        <div class="mini-grid moon-grid">
+          <div class="mini"><div class="k">Moonrise</div><div class="v moon-mini" id="moonrise">--</div></div>
+          <div class="mini"><div class="k">Moonset</div><div class="v moon-mini" id="moonset">--</div></div>
+          <div class="mini"><div class="k">Full Moon</div><div class="v moon-mini" id="fullMoon">--</div></div>
+          <div class="mini"><div class="k">New Moon</div><div class="v moon-mini" id="newMoon">--</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TEMPORARY build tag: shows the UI (app.js) build vs the server build -->
+  <div class="build-tag" id="buildTag"></div>
+
+  <div class="drawer-scrim" id="settingsScrim"></div>
+  <aside class="drawer" id="settingsDrawer" role="dialog" aria-label="Settings" aria-modal="true">
+    <div class="drawer-head">
+      <span>Settings</span>
+      <button class="drawer-close" id="settingsClose" type="button" aria-label="Close settings">&times;</button>
+    </div>
+    <div class="drawer-body" id="settingsBody"></div>
+    <div class="drawer-power">
+      <h3>Power</h3>
+      <div class="power-btns">
+        <button class="power-btn" type="button" data-action="exit">Exit console</button>
+        <button class="power-btn danger" type="button" data-action="reboot">Reboot</button>
+        <button class="power-btn danger" type="button" data-action="shutdown">Shut down</button>
+      </div>
+    </div>
+  </aside>
+
+  <script src="/app.js"></script>
+</body>
+</html>
