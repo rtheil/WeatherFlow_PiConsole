@@ -37,7 +37,7 @@ CACHE_TTL = 8  # seconds; be gentle with the API while iterating
 
 # TEMPORARY build stamp — keep in sync with WEB_UI_BUILD in server/bridge.py
 # and BUILD in web/app.js.
-WEB_UI_BUILD = '109'
+WEB_UI_BUILD = '110'
 
 MIME = {
     '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -193,6 +193,16 @@ def cv_temp(v_c, dp=1):
     if v_c is None:
         return _dash(unit)
     v = v_c * 9 / 5 + 32 if _settings['Units']['Temp'] == 'f' else v_c
+    return ['{:.{}f}'.format(v, dp), unit]
+
+
+def fmt_temp(v, dp=0):
+    """ Format a temperature that is ALREADY in the display unit (e.g. the
+    BetterForecast API returns it directly when units_temp is requested), so
+    WeatherFlow does the conversion/rounding — matching the Tempest app. """
+    unit = '°F' if _settings['Units']['Temp'] == 'f' else '°C'
+    if v is None:
+        return _dash(unit)
     return ['{:.{}f}'.format(v, dp), unit]
 
 
@@ -517,7 +527,8 @@ def build_snapshot(token, station_id, version):
     astro['Moonset'] = ['--', '']
     try:
         r = requests.get(f'{REST}/better_forecast',
-                         params={'station_id': station_id, 'token': token}, timeout=10)
+                         params={'station_id': station_id, 'token': token,
+                                 'units_temp': _settings['Units']['Temp']}, timeout=10)
         r.raise_for_status()
         fj = r.json()
         daily_all = fj.get('forecast', {}).get('daily') or []
@@ -528,8 +539,8 @@ def build_snapshot(token, station_id, version):
         met = {
             'Conditions':   [daily.get('conditions', cc.get('conditions', ''))],
             'Icon':         [daily.get('icon', '')],
-            'highTemp':     cv_temp(daily.get('air_temp_high'), 0),
-            'lowTemp':      cv_temp(daily.get('air_temp_low'), 0),
+            'highTemp':     fmt_temp(daily.get('air_temp_high')),
+            'lowTemp':      fmt_temp(daily.get('air_temp_low')),
             'PrecipPercnt': _f(daily.get('precip_probability'), '{:.0f}', '%'),
         }
         # 5-day outlook: one entry per day with weekday, icon, high, low.
@@ -539,8 +550,8 @@ def build_snapshot(token, station_id, version):
             forecast.append({
                 'day':    dow,
                 'icon':   d.get('icon', ''),
-                'high':   cv_temp(d.get('air_temp_high'), 0),
-                'low':    cv_temp(d.get('air_temp_low'), 0),
+                'high':   fmt_temp(d.get('air_temp_high')),
+                'low':    fmt_temp(d.get('air_temp_low')),
                 'precip': _f(d.get('precip_probability'), '{:.0f}', '%'),
             })
         sager = {'Forecast': [cc.get('conditions', '') or daily.get('conditions', '')

@@ -44,7 +44,7 @@ FONT_DIR = Path(__file__).resolve().parent.parent / 'fonts'
 # TEMPORARY build stamp — bump every deploy to confirm the Pi is running the
 # new code (see startup log, /api/health, and the web UI's browser console).
 # Must match BUILD in web/app.js. Remove once we're done verifying deploys.
-WEB_UI_BUILD = '109'
+WEB_UI_BUILD = '110'
 
 # Defaults; overridable via environment for advanced users / kiosk setups
 DEFAULT_HOST = os.environ.get('WFPICONSOLE_WEB_HOST', '0.0.0.0')
@@ -197,13 +197,17 @@ class WebBridge:
             resp = requests.get(
                 'https://swd.weatherflow.com/swd/rest/better_forecast',
                 params={'token': cfg['Keys']['WeatherFlow'],
-                        'station_id': cfg['Station']['StationID']}, timeout=15)
+                        'station_id': cfg['Station']['StationID'],
+                        # Ask WeatherFlow for the display unit so it does the
+                        # conversion/rounding — matches the Tempest app instead
+                        # of drifting ~1 degree from a local C->F + round.
+                        'units_temp': 'f' if is_f else 'c'}, timeout=15)
             daily = ((resp.json().get('forecast') or {}).get('daily')) or []
 
-            def temp(c):
-                if c is None:
+            def temp(v):
+                if v is None:
                     return ['--', unit]
-                return ['{:.0f}'.format(c * 9 / 5 + 32 if is_f else c), unit]
+                return ['{:.0f}'.format(v), unit]
 
             out = []
             for i, day in enumerate(daily[:5]):
