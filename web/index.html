@@ -126,18 +126,18 @@
         <div class="tile-head"><span class="tile-accent" style="background:var(--cyan)"></span><span class="tile-label">Wind</span></div>
         <div class="gauge-wrap">
           <svg viewBox="0 0 200 200" aria-label="Wind direction">
-            <circle cx="100" cy="100" r="88" fill="none" stroke="var(--border)" stroke-width="1.5"/>
-            <circle cx="100" cy="100" r="70" fill="none" stroke="var(--border)" stroke-width="1"/>
-            <g id="ticks" stroke="var(--faint)"></g>
-            <text x="100" y="26" text-anchor="middle" fill="var(--muted)" font-size="12" font-weight="700">N</text>
-            <text x="178" y="105" text-anchor="middle" fill="var(--faint)" font-size="11">E</text>
-            <text x="100" y="184" text-anchor="middle" fill="var(--faint)" font-size="11">S</text>
-            <text x="22" y="105" text-anchor="middle" fill="var(--faint)" font-size="11">W</text>
+            <circle cx="100" cy="100" r="88" fill="none" stroke="var(--faint)" stroke-width="2"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="var(--border-strong)" stroke-width="1"/>
+            <g id="ticks" stroke="var(--muted)"></g>
+            <text x="100" y="27" text-anchor="middle" fill="var(--text)" font-size="15" font-weight="700">N</text>
+            <text x="179" y="106" text-anchor="middle" fill="var(--muted)" font-size="13" font-weight="600">E</text>
+            <text x="100" y="185" text-anchor="middle" fill="var(--muted)" font-size="13" font-weight="600">S</text>
+            <text x="21" y="106" text-anchor="middle" fill="var(--muted)" font-size="13" font-weight="600">W</text>
             <g id="needle" transform="rotate(0 100 100)">
-              <path d="M100 34 L108 100 L100 112 L92 100 Z" fill="var(--cyan)"/>
-              <path d="M100 166 L108 100 L92 100 Z" fill="color-mix(in srgb, var(--cyan) 30%, transparent)"/>
+              <path d="M100 32 L109 100 L100 114 L91 100 Z" fill="var(--cyan)"/>
+              <path d="M100 168 L109 100 L91 100 Z" fill="color-mix(in srgb, var(--cyan) 42%, transparent)"/>
             </g>
-            <circle cx="100" cy="100" r="6" fill="var(--surface)" stroke="var(--cyan)" stroke-width="2"/>
+            <circle cx="100" cy="100" r="6.5" fill="var(--surface)" stroke="var(--cyan)" stroke-width="2.5"/>
           </svg>
         </div>
         <div class="compass-readout">

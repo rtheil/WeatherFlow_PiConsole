@@ -8,7 +8,7 @@
 
 // TEMPORARY build stamp — must match WEB_UI_BUILD in server/bridge.py.
 // Lets us confirm the browser loaded fresh JS (not a cached copy).
-const BUILD = '112';
+const BUILD = '113';
 
 // ---- tiny DOM + data helpers ------------------------------------------- //
 const $ = (id) => document.getElementById(id);
@@ -569,8 +569,8 @@ function tick() {
       const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       l.setAttribute('x1', 100 + r1 * Math.sin(a)); l.setAttribute('y1', 100 - r1 * Math.cos(a));
       l.setAttribute('x2', 100 + r2 * Math.sin(a)); l.setAttribute('y2', 100 - r2 * Math.cos(a));
-      l.setAttribute('stroke-width', major ? 1.6 : 0.8);
-      l.setAttribute('opacity', major ? 0.9 : 0.5);
+      l.setAttribute('stroke-width', major ? 1.8 : 0.9);
+      l.setAttribute('opacity', major ? 1 : 0.6);
       g.appendChild(l);
     }
   }
